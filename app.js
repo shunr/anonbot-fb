@@ -3,10 +3,11 @@ const fs = require('fs');
 const https = require('https');
 const express = require('express');
 const bodyParser = require('body-parser');
-const request = require('request');
 const app = express();
 
 const conf = require('./conf');
+const hooks = require('./bot/hooks');
+const dataservice = require('./bot/dataservice');
 
 app.set('port', (process.env.PORT || conf.PORT));
 app.use(bodyParser.urlencoded({
@@ -14,62 +15,25 @@ app.use(bodyParser.urlencoded({
 }));
 app.use(bodyParser.json());
 
-https.createServer({
+let ssl_settings = {
   key: fs.readFileSync(conf.SSL_CONFIG.KEY),
   cert: fs.readFileSync(conf.SSL_CONFIG.CERT),
   ca: fs.readFileSync(conf.SSL_CONFIG.CA)
-}, app).listen(app.get('port'), function() {
-  console.log('running on port', app.get('port'));
-});
+};
 
-app.get('/', function(req, res) {
-  res.send('w e w l a d');
-})
-
-app.get('/webhook', function(req, res) {
-  if (req.query['hub.verify_token'] === conf.VERIFY_TOKEN) {
-    res.send(req.query['hub.challenge']);
-  } else {
-    res.send('Invalid token');
-  }
-});
-
-app.post('/webhook', function(req, res) {
-  let events = req.body.entry[0].messaging;
-  for (let i = 0; i < events.length; i++) {
-    let event = events[i];
-    let sender = event.sender.id;
-    if (event.message && event.message.text) {
-      let text = event.message.text;
-      sendTextMessage(sender, text);
-    }
-  }
-  console.log(events);
-  res.sendStatus(200);
-});
-
-
-function sendTextMessage(sender, text) {
-  let messageData = {
-    text: text
-  }
-  request({
-    url: conf.FB_ENDPOINT_URL,
-    qs: {
-      access_token: conf.PAGE_TOKEN
-    },
-    method: 'POST',
-    json: {
-      recipient: {
-        id: sender
-      },
-      message: messageData,
-    }
-  }, function(error, response, body) {
-    if (error) {
-      console.log('Error sending messages: ', error)
-    } else if (response.body.error) {
-      console.log('Error: ', response.body.error)
-    }
-  })
+function startServer() {
+  https.createServer(ssl_settings, app).listen(app.get('port'), function() {
+    console.log('Running on port', app.get('port'));
+  });
+  app.get('/', hooks.index)
+  app.get('/webhook', hooks.initialize);
+  app.post('/webhook', hooks.handleMessage);
 }
+
+dataservice.initialize(function(err, collection) {
+  if (err) {
+    throw err;
+  } else {
+    startServer();
+  }
+});

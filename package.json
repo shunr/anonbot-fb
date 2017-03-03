@@ -16,6 +16,7 @@
     "express": "4.15.0",
     "fs": "0.0.1-security",
     "https": "^1.0.0",
-    "request": "^2.79.0"
+    "request": "^2.79.0",
+    "tingodb": "^0.5.1"
   }
 }

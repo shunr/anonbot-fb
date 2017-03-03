@@ -1,6 +1,0 @@
-var conf = module.exports = {
-    VERIFY_TOKEN: 'verify-token',
-    PAGE_TOKEN: 'page-token',
-    FB_ENDPOINT_URL: 'https://graph.facebook.com/v2.6/me/messages',
-    PORT: 3000
-};
