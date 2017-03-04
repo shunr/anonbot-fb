@@ -1,11 +1,10 @@
 {
-  "FLAVOR_TEXT": "d i s r u p t i v e",
   "PERSISTENT_MENU": {
     "setting_type": "call_to_actions",
     "thread_state": "existing_thread",
     "call_to_actions": [{
       "type": "postback",
-      "title": "💬 Chat with another user!",
+      "title": "🎲 Chat with someone else",
       "payload": "AB_REROLL_CHAT_PARTNER"
     }, {
       "type": "postback",
@@ -16,20 +15,25 @@
   "QUICK_REPLIES": {
     "START_CONVERSATION_PROMPT": [{
       "content_type": "text",
-      "title": "💬 Start a conversation!",
+      "title": "💬 Start conversation",
       "payload": "AB_REROLL_CHAT_PARTNER"
     }]
   },
   "BUTTONS": {
    "USER_ENDED_PROMPT": [{
       "type": "postback",
-      "title": "💬 Talk to someone else!",
+      "title": "🎲 Talk to someone else",
       "payload": "AB_REROLL_CHAT_PARTNER"
     }],
     "PARTNER_ENDED_PROMPT": [{
       "type": "postback",
       "title": "🛑 Stop chatting",
       "payload": "AB_STOP_CHAT"
+    }],
+    "REROLL_RETRY": [{
+      "type": "postback",
+      "title": "🔄 Retry",
+      "payload": "AB_REROLL_RETRY"
     }]
   }
 }

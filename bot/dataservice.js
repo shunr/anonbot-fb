@@ -61,9 +61,10 @@ mod.pairUser = function(id, callback) {
             $set: {
               partner: id
             }
-          }, callback)
+          }, function(){
+            callback(err, item[0].id);
+          });
         });
-
       }
     })
 };

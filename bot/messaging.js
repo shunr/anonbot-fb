@@ -40,7 +40,7 @@ mod.sendQuickReply = function(recipient, text, replies) {
     },
     message: {
       text: text,
-      buttons: replies
+      quick_replies: replies
     }
   });
 }

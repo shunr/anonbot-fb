@@ -3,7 +3,7 @@ const fs = require('fs');
 const request = require('request');
 
 const conf = require('../conf');
-const static_content = require('../static/static_content');
+const bot_alerts = require('../bot/botalerts');
 
 const messaging = require('./messaging');
 const dataservice = require('./dataservice');
@@ -17,7 +17,7 @@ const user_options = {
 };
 
 mod.index = function(req, res) {
-  res.send(static_content.FLAVOR_TEXT);
+  res.send("f l a v o r t e x t");
 };
 
 mod.handleMessage = function(req, res) {
@@ -25,22 +25,27 @@ mod.handleMessage = function(req, res) {
   for (let i = 0; i < events.length; i++) {
     let event = events[i];
     let sender = event.sender.id;
-    if (event.message && event.message.text) {
+    if (event.message && event.message.text && !event.message.quick_reply) {
       if (event.message.is_echo) {
         continue;
       }
       let text = event.message.text;
       dataservice.getUser(sender, function(err, user) {
         if (err || user == null) {
-          messaging.sendText(sender, "⌛ You're not subscribed");
+          bot_alerts.INTRO(sender);
         } else if (user.partner != null) {
           messaging.sendText(user.partner, text);
         } else {
-          messaging.sendText(sender, "You're not paired");
+          bot_alerts.NOT_PAIRED(sender);
         }
       });
-    } else if (event.postback && event.postback.payload) {
-      let payload = event.postback.payload;
+    } else if ((event.postback && event.postback.payload) || (event.message && event.message.quick_reply)) {
+      let payload;
+      if (event.postback && event.postback.payload) {
+        payload = event.postback.payload;
+      } else if (event.message.quick_reply) {
+        payload = event.message.quick_reply.payload;
+      }
       switch (payload) {
         case user_options.ROLL:
           dataservice.getUser(sender, function(err, user) {
@@ -61,6 +66,8 @@ mod.handleMessage = function(req, res) {
               if (user.partner != null) {
                 removePartner(user.partner);
               }
+            } else {
+              bot_alerts.NOT_REGISTERED(sender);
             }
           });
           break;
@@ -73,7 +80,7 @@ mod.handleMessage = function(req, res) {
 function addUser(id) {
   dataservice.addUser(id, function(err, result) {
     if (err) {
-      messaging.sendText(id, "❗ Could not start a conversation. Please try again later.");
+      bot_alerts.REGISTRATION_ERROR(id);
     } else {
       pairUser(id);
     }
@@ -85,7 +92,7 @@ function removeUser(id) {
     if (err) {
       console.log(err);
     } else {
-      messaging.sendButtons(id, "Conversation ended. Do you want to start another one?", static_content.BUTTONS.USER_ENDED_PROMPT);
+      bot_alerts.USER_ENDED(id);
     }
   });
 }
@@ -95,18 +102,20 @@ function removePartner(id) {
     if (err) {
       console.log(err);
     } else {
-      messaging.sendButtons(id, "The other person left the chat. You're being automatically matched with someone else!", static_content.BUTTONS.PARTNER_ENDED_PROMPT);
+      bot_alerts.PARTNER_ENDED(id);
+      messaging.typingOn(id);
     }
   });
 }
 
 function pairUser(id) {
   messaging.typingOn(id);
-  dataservice.pairUser(id, function(err, result) {
+  dataservice.pairUser(id, function(err, partner) {
     if (err) {
-      messaging.sendText(id, "❗ Nobody is available to chat right now. Dont worry, you will be paired with someone automatically.");
-    } else {
-      messaging.sendText(id, "✔️ You're now paired with someone else. Say hi!");
+      bot_alerts.NO_PARTNERS(id);
+    } else if (partner) {
+      bot_alerts.PARTNER_FOUND(id);
+      bot_alerts.PARTNER_FOUND_OTHER(partner);
     }
     messaging.typingOff(id);
   });
