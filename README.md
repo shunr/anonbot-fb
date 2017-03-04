@@ -6,16 +6,19 @@ Good mouthfeel and high in protein
 
 ## Installation
 Clone the repo
+
 Install dependencies
 ```
 npm install
 ```
 Copy conf.sample.js to conf.js and add your tokens & keys
+
 Start mongodb
 ```
 service mongod start
 ```
 Start the bot
+
 ```
 npm start
 ```
