@@ -9,5 +9,5 @@ var conf = module.exports = {
     CERT: "/etc/letsencrypt/archive/anonbot.gq/fullchain1.pem",
     CA: "/etc/letsencrypt/archive/anonbot.gq/chain1.pem"
   },
-  DB_PATH: "/home/anonbotdb"
+  DB_URL: "mongodb://localhost:27017/anonbot"
 };

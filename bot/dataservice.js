@@ -1,8 +1,8 @@
 'use strict'
-var Engine = require('tingodb')();
 const conf = require('../conf');
-var db = new Engine.Db(conf.DB_PATH, {});
+var MongoClient = require('mongodb').MongoClient;
 
+let db;
 let mod = module.exports = {};
 
 mod.getUsers = function() {
@@ -22,41 +22,78 @@ mod.isUserSubscribed = function(id, callback) {
 mod.addUser = function(id, callback) {
   var user = {
     id: id,
-    partner: id
+    partner: null
   };
   mod.getUsers().insert(user, {
     w: 1
   }, callback);
 };
 
+mod.pairUser = function(id, callback) {
+  mod.getUsers().aggregate(
+    [{
+      $sample: {
+        size: 1
+      }
+    }, {
+      $match: {
+        id: {
+          $ne: id
+        },
+        partner: null
+      }
+    }],
+    function(err, item) {
+      if (err || item.length === 0) {
+        return callback(true, null);
+      } else {
+        mod.getUsers().update({
+          id: id
+        }, {
+          $set: {
+            partner: item[0].id
+          }
+        }, function(err, result) {
+          
+          mod.getUsers().update({
+            id: item[0].id
+          }, {
+            $set: {
+              partner: id
+            }
+          }, callback)
+        });
+
+      }
+    })
+};
+
 mod.removeUser = function(id, callback) {
   mod.getUser(id, function(err, item) {
-    if (!err && item.partner != null) {
-      mod.unpairUsers(id, item.partner);
-    }
+    mod.getUsers().remove({
+      id: id
+    }, callback);
   });
-  mod.getUsers().remove({
+};
+
+mod.unpairUser = function(id, callback) {
+  mod.getUsers().update({
     id: id
+  }, {
+    $set: {
+      partner: null
+    }
   }, callback);
 };
 
-mod.unpairUsers = function(id1, id2) {
-  mod.getUsers().update({
-    id: id1
-  }, {
-    $set: {
-      partner: null
-    }
-  });
-  mod.getUsers().update({
-    id: id2
-  }, {
-    $set: {
-      partner: null
-    }
-  });
-};
-
 mod.initialize = function(callback) {
-  db.createCollection('users', callback);
+  MongoClient.connect(conf.DB_URL, function(err, mong) {
+    if (err) {
+      return console.log(err);
+    }
+    db = mong;
+    db.collection('users').remove({}, function() {
+      db.createCollection('users', callback);
+    });
+  });
 };

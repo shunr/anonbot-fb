@@ -5,11 +5,30 @@
     "thread_state": "existing_thread",
     "call_to_actions": [{
       "type": "postback",
-      "title": "Chat with another user",
+      "title": "💬 Chat with another user!",
       "payload": "AB_REROLL_CHAT_PARTNER"
     }, {
       "type": "postback",
-      "title": "Stop chatting",
+      "title": "🛑 Stop chatting",
+      "payload": "AB_STOP_CHAT"
+    }]
+  },
+  "QUICK_REPLIES": {
+    "START_CONVERSATION_PROMPT": [{
+      "content_type": "text",
+      "title": "💬 Start a conversation!",
+      "payload": "AB_REROLL_CHAT_PARTNER"
+    }]
+  },
+  "BUTTONS": {
+   "USER_ENDED_PROMPT": [{
+      "type": "postback",
+      "title": "💬 Talk to someone else!",
+      "payload": "AB_REROLL_CHAT_PARTNER"
+    }],
+    "PARTNER_ENDED_PROMPT": [{
+      "type": "postback",
+      "title": "🛑 Stop chatting",
       "payload": "AB_STOP_CHAT"
     }]
   }

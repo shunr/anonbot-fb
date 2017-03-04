@@ -29,32 +29,41 @@ mod.handleMessage = function(req, res) {
       if (event.message.is_echo) {
         continue;
       }
-      console.log(sender);
       let text = event.message.text;
-
-      dataservice.getUser(sender, function(err, item) {
-        if (err) {
-          messaging.sendTextMessage(sender, "You're not subscribed");
-        } else if (item.partner != null) {
-          messaging.sendTextMessage(item.partner, text);
+      dataservice.getUser(sender, function(err, user) {
+        if (err || user == null) {
+          messaging.sendText(sender, "⌛ You're not subscribed");
+        } else if (user.partner != null) {
+          messaging.sendText(user.partner, text);
         } else {
-          messaging.sendTextMessage(sender, "You're not paired");
+          messaging.sendText(sender, "You're not paired");
         }
       });
-
     } else if (event.postback && event.postback.payload) {
       let payload = event.postback.payload;
-      console.log(payload);
-      if (payload == user_options.ROLL) {
-        dataservice.getUser(sender, function(err, item) {
-          if (err) {
-            addUser(sender);
-          } else {
-            pairUser(sender);
-          }
-        });
-      } else if (payload == user_options.STOP) {
-        removeUser(sender);
+      switch (payload) {
+        case user_options.ROLL:
+          dataservice.getUser(sender, function(err, user) {
+            if (err || user == null) {
+              addUser(sender);
+            } else {
+              pairUser(sender);
+              if (user.partner != null) {
+                removePartner(user.partner);
+              }
+            }
+          });
+          break;
+        case user_options.STOP:
+          dataservice.getUser(sender, function(err, user) {
+            if (!err && user != null) {
+              removeUser(sender);
+              if (user.partner != null) {
+                removePartner(user.partner);
+              }
+            }
+          });
+          break;
       }
     }
   }
@@ -64,9 +73,9 @@ mod.handleMessage = function(req, res) {
 function addUser(id) {
   dataservice.addUser(id, function(err, result) {
     if (err) {
-      messaging.sendTextMessage(id, "Could not register");
+      messaging.sendText(id, "❗ Could not start a conversation. Please try again later.");
     } else {
-      messaging.sendTextMessage(id, "You're registered");
+      pairUser(id);
     }
   });
 }
@@ -74,34 +83,38 @@ function addUser(id) {
 function removeUser(id) {
   dataservice.removeUser(id, function(err, result) {
     if (err) {
-      messaging.sendTextMessage(id, "Try again");
+      console.log(err);
     } else {
-      messaging.sendTextMessage(id, "BYE");
+      messaging.sendButtons(id, "Conversation ended. Do you want to start another one?", static_content.BUTTONS.USER_ENDED_PROMPT);
+    }
+  });
+}
+
+function removePartner(id) {
+  dataservice.unpairUser(id, function(err, result) {
+    if (err) {
+      console.log(err);
+    } else {
+      messaging.sendButtons(id, "The other person left the chat. You're being automatically matched with someone else!", static_content.BUTTONS.PARTNER_ENDED_PROMPT);
     }
   });
 }
 
 function pairUser(id) {
-  dataservice.addUser(id, function(err, result) {
+  messaging.typingOn(id);
+  dataservice.pairUser(id, function(err, result) {
     if (err) {
-      messaging.sendTextMessage(id, "Could not register");
+      messaging.sendText(id, "❗ Nobody is available to chat right now. Dont worry, you will be paired with someone automatically.");
     } else {
-      messaging.sendTextMessage(id, "You're paired");
+      messaging.sendText(id, "✔️ You're now paired with someone else. Say hi!");
     }
+    messaging.typingOff(id);
   });
 }
 
 mod.initialize = function(req, res) {
   if (req.query['hub.verify_token'] === conf.VERIFY_TOKEN) {
     res.send(req.query['hub.challenge']);
-    request({
-      url: conf.FB_SETTINGS_URL,
-      method: "POST",
-      form: {
-        access_token: conf.PAGE_TOKEN
-      },
-      json: static_content.PERSISTENT_MENU
-    });
   } else {
     res.send('Invalid token');
   }
