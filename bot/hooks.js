@@ -6,7 +6,7 @@ const conf = require('../conf');
 const bot_alerts = require('../bot/botalerts');
 
 const messaging = require('./messaging');
-const dataservice = require('./dataservice');
+const dbservice = require('./dbservice');
 const pairing = require('./pairing');
 
 let mod = module.exports = {};
@@ -30,11 +30,15 @@ mod.handleMessage = function(req, res) {
         continue;
       }
       let text = event.message.text;
-      dataservice.getUser(sender, function(err, user) {
-        if (err || user == null) {
+      dbservice.getRoomWithUser(sender, function(err, room) {
+        if (err || room == null) {
           bot_alerts.INTRO(sender);
-        } else if (user.partner != null) {
-          messaging.sendText(user.partner, text);
+        } else if (room.full === true) {
+          for (let i = 0; i < room.users.length; i++) {
+            if (room.users[i] != sender) {
+              messaging.sendText(room.users[i], text);
+            }
+          }
         } else {
           bot_alerts.NOT_PAIRED(sender);
         }
@@ -48,24 +52,20 @@ mod.handleMessage = function(req, res) {
       }
       switch (payload) {
         case user_options.ROLL:
-          dataservice.getUser(sender, function(err, user) {
-            if (err || user == null) {
-              addUser(sender);
-            } else {
+          messaging.typingOn(sender);
+          dbservice.getRoomWithUser(sender, function(err, room) {
+            if (err || room == null) {
               pairUser(sender);
-              if (user.partner != null) {
-                removePartner(user.partner);
-              }
+            } else {
+              removeRoom(room, sender, pairUser);
             }
           });
           break;
         case user_options.STOP:
-          dataservice.getUser(sender, function(err, user) {
-            if (!err && user != null) {
-              removeUser(sender);
-              if (user.partner != null) {
-                removePartner(user.partner);
-              }
+          messaging.typingOn(sender);
+          dbservice.getRoomWithUser(sender, function(err, room) {
+            if (!err && room != null) {
+              removeRoom(room, sender);
             } else {
               bot_alerts.NOT_REGISTERED(sender);
             }
@@ -77,47 +77,49 @@ mod.handleMessage = function(req, res) {
   res.sendStatus(200);
 };
 
-function addUser(id) {
-  dataservice.addUser(id, function(err, result) {
+function newRoomWithUser(id) {
+  dbservice.addRoomWithUser(id, function(err, result) {
     if (err) {
       bot_alerts.REGISTRATION_ERROR(id);
     } else {
-      pairUser(id);
+      bot_alerts.NO_PARTNERS(id);
     }
   });
 }
 
-function removeUser(id) {
-  dataservice.removeUser(id, function(err, result) {
+function removeRoom(room, initiator, callback) {
+  dbservice.removeRoom(room._id, function(err, result) {
     if (err) {
       console.log(err);
     } else {
-      bot_alerts.USER_ENDED(id);
-    }
-  });
-}
-
-function removePartner(id) {
-  dataservice.unpairUser(id, function(err, result) {
-    if (err) {
-      console.log(err);
-    } else {
-      bot_alerts.PARTNER_ENDED(id);
-      messaging.typingOn(id);
+      for (let i = 0; i < room.users.length; i++) {
+        if (room.users[i] == initiator) {
+          if (callback == null) {
+            bot_alerts.USER_ENDED(room.users[i]);
+          }
+        } else {
+          bot_alerts.PARTNER_ENDED(room.users[i]);
+        }
+      }
+      if (callback) {
+        callback(initiator);
+      }
     }
   });
 }
 
 function pairUser(id) {
-  messaging.typingOn(id);
-  dataservice.pairUser(id, function(err, partner) {
+  dbservice.pairUser(id, function(err, room) {
     if (err) {
-      bot_alerts.NO_PARTNERS(id);
-    } else if (partner) {
+      newRoomWithUser(id);
+    } else if (room) {
       bot_alerts.PARTNER_FOUND(id);
-      bot_alerts.PARTNER_FOUND_OTHER(partner);
+      for (let i = 0; i < room.users.length; i++) {
+        if (room.users[i] != id) {
+          bot_alerts.PARTNER_FOUND_OTHER(room.users[i]);
+        }
+      }
     }
-    messaging.typingOff(id);
   });
 }
 

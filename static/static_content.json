@@ -22,7 +22,7 @@
   "BUTTONS": {
    "USER_ENDED_PROMPT": [{
       "type": "postback",
-      "title": "🎲 Talk to someone else",
+      "title": "🎲 Find someone else",
       "payload": "AB_REROLL_CHAT_PARTNER"
     }],
     "PARTNER_ENDED_PROMPT": [{
@@ -33,7 +33,7 @@
     "REROLL_RETRY": [{
       "type": "postback",
       "title": "🔄 Retry",
-      "payload": "AB_REROLL_RETRY"
+      "payload": "AB_REROLL_CHAT_PARTNER"
     }]
   }
 }

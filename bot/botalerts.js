@@ -10,8 +10,7 @@ mod.INTRO = function(id) {
 };
 
 mod.NOT_PAIRED = function(id) {
-  messaging.sendText(id, "You're not paired");
-  messaging.sendButtons(id, "⏳ You are waiting for someone to chat with you. Look for someone to talk to?", static_content.BUTTONS.REROLL_RETRY);
+  messaging.sendButtons(id, "⏳ You are waiting for someone to chat with you. Try searching again?", static_content.BUTTONS.REROLL_RETRY);
 };
 
 mod.NOT_REGISTERED = function(id) {
@@ -27,11 +26,11 @@ mod.USER_ENDED = function(id) {
 }
 
 mod.PARTNER_ENDED = function(id) {
-  messaging.sendButtons(id, "🗿 The other person left the chat. You're being automatically matched with someone else!", static_content.BUTTONS.PARTNER_ENDED_PROMPT);
+  messaging.sendButtons(id, "🗿 The other person left the chat. Start another conversation?", static_content.BUTTONS.USER_ENDED_PROMPT);
 }
 
 mod.NO_PARTNERS = function(id) {
-  messaging.sendText(id, "⏳ Nobody is available to chat right now. Dont worry, you will be paired with someone automatically.");
+  messaging.sendText(id, "⏳ Nobody is available to chat right now. Don't worry, you will be paired with someone automatically.");
 }
 
 mod.PARTNER_FOUND = function(id) {

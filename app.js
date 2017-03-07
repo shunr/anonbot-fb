@@ -9,7 +9,7 @@ const app = express();
 const conf = require('./conf');
 const static_content = require('./static/static_content');
 const hooks = require('./bot/hooks');
-const dataservice = require('./bot/dataservice');
+const dbservice = require('./bot/dbservice');
 
 app.set('port', (process.env.PORT || conf.PORT));
 app.use(bodyParser.urlencoded({
@@ -41,7 +41,7 @@ function startServer() {
   });
 }
 
-dataservice.initialize(function(err, collection) {
+dbservice.initialize(function(err, collection) {
   if (err) {
     throw err;
   } else {
