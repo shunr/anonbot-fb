@@ -1,4 +1,5 @@
 var conf = module.exports = {
+  WEBHOOK: "/messenger",
   VERIFY_TOKEN: 'verify-token',
   PAGE_TOKEN: 'page-token',
   FB_ENDPOINT_URL: 'https://graph.facebook.com/v2.6/me/messages',
