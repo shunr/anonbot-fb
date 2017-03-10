@@ -8,7 +8,7 @@
       "payload": "AB_REROLL_CHAT_PARTNER"
     }, {
       "type": "postback",
-      "title": "🛑 Stop chatting",
+      "title": "❌ Stop chatting",
       "payload": "AB_STOP_CHAT"
     }]
   },
@@ -27,7 +27,7 @@
     }],
     "PARTNER_ENDED_PROMPT": [{
       "type": "postback",
-      "title": "🛑 Stop chatting",
+      "title": "❌ Stop chatting",
       "payload": "AB_STOP_CHAT"
     }],
     "REROLL_RETRY": [{

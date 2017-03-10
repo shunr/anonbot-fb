@@ -28,8 +28,8 @@ function startServer() {
     console.log('Running on port', app.get('port'));
   });
   app.get('/', hooks.index)
-  app.get('/webhook', hooks.initialize);
-  app.post('/webhook', hooks.handleMessage);
+  app.get(conf.WEBHOOK, hooks.initialize);
+  app.post(conf.WEBHOOK, hooks.handleMessage);
   request({
     url: conf.FB_SETTINGS_URL,
     method: "POST",
