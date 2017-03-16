@@ -19,6 +19,15 @@
       "payload": "AB_REROLL_CHAT_PARTNER"
     }]
   },
+  "CALL_TO_ACTION": {
+    "setting_type":"call_to_actions",
+    "thread_state":"new_thread",
+    "call_to_actions":[
+      {
+        "payload":"AB_START"
+      }
+    ]
+  },
   "BUTTONS": {
    "USER_ENDED_PROMPT": [{
       "type": "postback",

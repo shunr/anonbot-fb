@@ -4,6 +4,15 @@ const conf = require('../conf');
 
 let mod = module.exports = {};
 
+mod.sendChat = function(recipient, message) {
+  mod.sendMessage({
+    recipient: {
+      id: recipient
+    },
+    message: message
+  });
+}
+
 mod.sendText = function(recipient, text) {
   mod.sendMessage({
     recipient: {

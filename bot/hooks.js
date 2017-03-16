@@ -13,7 +13,8 @@ let mod = module.exports = {};
 
 const user_options = {
   ROLL: "AB_REROLL_CHAT_PARTNER",
-  STOP: "AB_STOP_CHAT"
+  STOP: "AB_STOP_CHAT",
+  START: "AB_START"
 };
 
 mod.index = function(req, res) {
@@ -25,18 +26,32 @@ mod.handleMessage = function(req, res) {
   for (let i = 0; i < events.length; i++) {
     let event = events[i];
     let sender = event.sender.id;
-    if (event.message && event.message.text && !event.message.quick_reply) {
+    if (event.message && !event.message.quick_reply) {
       if (event.message.is_echo) {
         continue;
       }
-      let text = event.message.text;
+      let message = {
+        text: event.message.text,
+        attachment: (event.message.attachments) ? event.message.attachments[0] : undefined
+      };
+      if (event.message.attachments && event.message.attachments[0]) {
+        let att = event.message.attachments[0];
+        if (conf.ACCEPTED_ATTACHMENT_TYPES.includes(att.type)) {
+          message.attachment = {
+            type: att.type,
+            payload: {
+              url: att.payload.url
+            }
+          };
+        }
+      }
       dbservice.getRoomWithUser(sender, function(err, room) {
         if (err || room == null) {
           bot_alerts.INTRO(sender);
         } else if (room.full === true) {
           for (let i = 0; i < room.users.length; i++) {
             if (room.users[i] != sender) {
-              messaging.sendText(room.users[i], text);
+              messaging.sendChat(room.users[i], message);
             }
           }
         } else {
@@ -70,6 +85,9 @@ mod.handleMessage = function(req, res) {
               bot_alerts.NOT_REGISTERED(sender);
             }
           });
+          break;
+        case user_options.START:
+          bot_alerts.INTRO(sender);
           break;
       }
     }

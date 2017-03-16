@@ -4,6 +4,12 @@ var conf = module.exports = {
   PAGE_TOKEN: 'page-token',
   FB_ENDPOINT_URL: 'https://graph.facebook.com/v2.6/me/messages',
   FB_SETTINGS_URL: 'https://graph.facebook.com/v2.6/me/thread_settings',
+  ACCEPTED_ATTACHMENT_TYPES: [
+    'image',
+    'audio',
+    'file',
+    'video'
+  ],
   PORT: 443,
   SSL_CONFIG: {
     KEY: "/etc/letsencrypt/archive/anonbot.gq/privkey1.pem",
