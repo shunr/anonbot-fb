@@ -4,6 +4,7 @@ const request = require('request');
 const https = require('https');
 const express = require('express');
 const bodyParser = require('body-parser');
+const path = require('path');
 const app = express();
 
 const conf = require('./conf');
@@ -16,6 +17,7 @@ app.use(bodyParser.urlencoded({
   extended: false
 }));
 app.use(bodyParser.json());
+app.use(express.static(path.join(__dirname, 'public')));
 
 let ssl_settings = {
   key: fs.readFileSync(conf.SSL_CONFIG.KEY),
@@ -39,7 +41,6 @@ function startServer() {
   https.createServer(ssl_settings, app).listen(app.get('port'), function() {
     console.log('Running on port', app.get('port'));
   });
-  app.get('/', hooks.index)
   app.get(conf.WEBHOOK, hooks.initialize);
   app.post(conf.WEBHOOK, hooks.handleMessage);
   updateSetting(static_content.PERSISTENT_MENU);

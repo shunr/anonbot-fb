@@ -4,6 +4,7 @@ var conf = module.exports = {
   PAGE_TOKEN: 'page-token',
   FB_ENDPOINT_URL: 'https://graph.facebook.com/v2.6/me/messages',
   FB_SETTINGS_URL: 'https://graph.facebook.com/v2.6/me/thread_settings',
+  USER_TIMEOUT: 1000 * 60 * 60 * 18,
   ACCEPTED_ATTACHMENT_TYPES: [
     'image',
     'audio',

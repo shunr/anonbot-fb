@@ -7,7 +7,7 @@ const bot_alerts = require('../bot/botalerts');
 
 const messaging = require('./messaging');
 const dbservice = require('./dbservice');
-const pairing = require('./pairing');
+const timeouts = require('./timeouts');
 
 let mod = module.exports = {};
 
@@ -15,10 +15,6 @@ const user_options = {
   ROLL: "AB_REROLL_CHAT_PARTNER",
   STOP: "AB_STOP_CHAT",
   START: "AB_START"
-};
-
-mod.index = function(req, res) {
-  res.send("f l a v o r t e x t");
 };
 
 mod.handleMessage = function(req, res) {
@@ -52,11 +48,14 @@ mod.handleMessage = function(req, res) {
           for (let i = 0; i < room.users.length; i++) {
             if (room.users[i] != sender) {
               messaging.sendChat(room.users[i], message);
+              refreshTimeout(sender, room);
             }
           }
         } else {
           bot_alerts.NOT_PAIRED(sender);
+          refreshTimeout(sender, room);
         }
+
       });
     } else if ((event.postback && event.postback.payload) || (event.message && event.message.quick_reply)) {
       let payload;
@@ -81,6 +80,7 @@ mod.handleMessage = function(req, res) {
           dbservice.getRoomWithUser(sender, function(err, room) {
             if (!err && room != null) {
               removeRoom(room, sender);
+              timeouts.clearTimeout(sender);
             } else {
               bot_alerts.NOT_REGISTERED(sender);
             }
@@ -101,22 +101,26 @@ function newRoomWithUser(id) {
       bot_alerts.REGISTRATION_ERROR(id);
     } else {
       bot_alerts.NO_PARTNERS(id);
+      refreshTimeout(id, result.ops[0]);
     }
   });
 }
 
-function removeRoom(room, initiator, callback) {
+function removeRoom(room, initiator, callback, isTimeout) {
   dbservice.removeRoom(room._id, function(err, result) {
     if (err) {
       console.log(err);
     } else {
       for (let i = 0; i < room.users.length; i++) {
-        if (room.users[i] == initiator) {
-          if (callback == null) {
-            bot_alerts.USER_ENDED(room.users[i]);
+        if (room.users[i] != initiator) {
+          if (!isTimeout) {
+            bot_alerts.PARTNER_ENDED(room.users[i]);
           }
-        } else {
-          bot_alerts.PARTNER_ENDED(room.users[i]);
+        }
+        if (callback == null && !isTimeout) {
+          bot_alerts.USER_ENDED(initiator);
+        } else if (isTimeout) {
+          bot_alerts.USER_TIMEOUT(initiator);
         }
       }
       if (callback) {
@@ -132,6 +136,7 @@ function pairUser(id) {
       newRoomWithUser(id);
     } else if (room) {
       bot_alerts.PARTNER_FOUND(id);
+      refreshTimeout(id, room);
       for (let i = 0; i < room.users.length; i++) {
         if (room.users[i] != id) {
           bot_alerts.PARTNER_FOUND_OTHER(room.users[i]);
@@ -139,6 +144,12 @@ function pairUser(id) {
       }
     }
   });
+}
+
+function refreshTimeout(user, room) {
+  timeouts.setTimeout(user, function() {
+    removeRoom(room, user, null, true)
+  }, conf.USER_TIMEOUT);
 }
 
 mod.initialize = function(req, res) {

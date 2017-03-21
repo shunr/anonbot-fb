@@ -43,6 +43,10 @@
       "type": "postback",
       "title": "🔄 Retry",
       "payload": "AB_REROLL_CHAT_PARTNER"
+    }, {
+      "type": "postback",
+      "title": "❌ Stop searching",
+      "payload": "AB_STOP_CHAT"
     }]
   }
 }
